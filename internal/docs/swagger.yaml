@@ -1,0 +1,81 @@
+definitions:
+  auth.RequestOTPDTO:
+    properties:
+      identifier:
+        type: string
+    type: object
+  auth.VerifyOTPDTO:
+    properties:
+      code:
+        type: string
+      identifier:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/request-otp:
+    post:
+      consumes:
+      - application/json
+      description: Send OTP code to email or phone number
+      parameters:
+      - description: Identifier
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RequestOTPDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Request OTP
+      tags:
+      - auth
+  /auth/verify-otp:
+    post:
+      consumes:
+      - application/json
+      description: Verify OTP code and issue JWT
+      parameters:
+      - description: Identifier + Code
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/auth.VerifyOTPDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Verify OTP
+      tags:
+      - auth
+swagger: "2.0"

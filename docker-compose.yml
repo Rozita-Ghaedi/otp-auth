@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: otp_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: otpuser
+      POSTGRES_PASSWORD: otppass
+      POSTGRES_DB: otp_auth
+    networks:
+      - otp-app
+    ports:
+      - "127.0.0.1:5431:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7
+    container_name: otp_redis
+    restart: always
+    ports:
+      - "6378:6379"
+    networks:
+      - otp-app
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: otp_app
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - otp-app
+    ports:
+      - "8080:8080"
+    environment:
+      POSTGRES_URL: postgres://otpuser:otppass@postgres:5432/otp_auth?sslmode=disable
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: cmFuZGcyN0cmlu9tLZ2V1zZWuZyZXQtXNw==
+
+
+  migrate:
+    image: migrate/migrate:v4.17.0
+    container_name: otp_migrate
+    volumes:
+      - ./migrations:/migrations
+    command: [ "-path", "/migrations", "-database", "postgres://otpuser:otppass@postgres:5432/otp_auth?sslmode=disable", "up" ]
+    depends_on:
+      - postgres
+
+      
+volumes:
+  pgdata:
+
+
+networks:
+  otp-app:
+    driver: bridge
